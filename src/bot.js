@@ -1,9 +1,10 @@
-import { Bot } from 'grammy';
+import { Bot, InputFile, InlineKeyboard } from 'grammy';
 import { config } from './config.js';
 import { storageService } from './services/storageService.js';
-import { goldService } from './services/goldService.js';
+import { goldService, GOLD_TYPES } from './services/goldService.js';
 import { messageFormatter } from './services/messageFormatter.js';
 import { scheduler } from './services/scheduler.js';
+import { chartService } from './services/chartService.js';
 
 const isPlaceholder = !config.botToken || 
   config.botToken === 'YOUR_TELEGRAM_BOT_TOKEN' || 
@@ -27,15 +28,44 @@ if (isPlaceholder) {
 
 const bot = new Bot(config.botToken);
 
+// Tạo bàn phím Inline Keyboard cho biểu đồ
+function createChartKeyboard(currentDays = 7, currentType = 'SJ9999') {
+  const keyboard = new InlineKeyboard();
+
+  // Hàng 1: Các khung thời gian ngắn
+  const daysList = [7, 14, 30];
+  daysList.forEach(d => {
+    const label = d === currentDays ? `🔘 ${d} Ngày` : `${d} Ngày`;
+    keyboard.text(label, `chart_${d}_${currentType}`);
+  });
+  keyboard.row();
+
+  // Hàng 2: Các khung thời gian dài
+  const longDays = [90, 180];
+  longDays.forEach(d => {
+    const label = d === currentDays ? `🔘 ${d === 90 ? '3 Tháng' : '6 Tháng'}` : (d === 90 ? '3 Tháng' : '6 Tháng');
+    keyboard.text(label, `chart_${d}_${currentType}`);
+  });
+  keyboard.row();
+
+  // Hàng 3: Đổi loại vàng
+  const isRing = currentType === 'SJ9999';
+  keyboard.text(isRing ? '🔘 💍 Vàng Nhẫn 9999' : '💍 Vàng Nhẫn 9999', `chart_${currentDays}_SJ9999`);
+  keyboard.text(!isRing ? '🔘 🧱 Vàng Miếng SJC' : '🧱 Vàng Miếng SJC', `chart_${currentDays}_SJL1L10`);
+
+  return keyboard;
+}
+
 // Cấu hình menu câu lệnh hiển thị trên Telegram
 async function setupBotCommands() {
   try {
     await bot.api.setMyCommands([
       { command: 'start', description: 'Đăng ký & nhận bản tin 8h sáng' },
+      { command: 'chart', description: 'Xem biểu đồ giá vàng (7d/30d/90d/180d)' },
       { command: 'giavang', description: 'Xem giá vàng 9999 mới nhất' },
       { command: 'thongke', description: 'Thống kê biến động tuần/tháng/3T/6T' },
       { command: 'khuyennghi', description: 'Kết luận & khuyến nghị Mua/Bán' },
-      { command: 'test', description: 'Bắn thử thông báo 8h sáng ngay lập tức' },
+      { command: 'test', description: 'Bắn thử thông báo 8h sáng kèm biểu đồ' },
       { command: 'stop', description: 'Tạm dừng nhận tin 8h sáng' },
       { command: 'help', description: 'Xem hướng dẫn sử dụng' }
     ]);
@@ -56,7 +86,8 @@ bot.command('start', async (ctx) => {
     `  • Giá Vàng Nhẫn 9999 & Vàng Miếng SJC 9999 chuẩn xác.\n` +
     `  • Thống kê tỷ lệ tăng/giảm % theo 1 tuần, 1 tháng, 3 tháng, 6 tháng.\n` +
     `  • Đánh giá mức độ giảm sâu hay tăng nóng.\n` +
-    `  • <b>Kết luận rõ ràng:</b> Khi nào NÊN MUA (giảm sâu) hoặc NÊN BÁN (tăng mạnh chốt lời).\n\n` +
+    `  • <b>Kết luận rõ ràng:</b> Khi nào NÊN MUA (giảm sâu) hoặc NÊN BÁN (tăng mạnh chốt lời).\n` +
+    `  • <b>Biểu đồ trực quan:</b> Xem biến động giá theo ngày.\n\n` +
     `⏳ <i>Đang tải dữ liệu thực tế hôm nay gửi bạn tham khảo ngay...</i>`;
 
   await ctx.reply(welcomeMsg, { parse_mode: 'HTML' });
@@ -65,8 +96,84 @@ bot.command('start', async (ctx) => {
     const goldData = await goldService.getFullGoldData();
     const report = messageFormatter.formatDailyReport(goldData);
     await ctx.reply(report, { parse_mode: 'HTML' });
+
+    // Gửi kèm biểu đồ 7 ngày mẫu
+    const { buffer, meta } = await chartService.getChartBuffer(7, 'SJ9999');
+    const caption = `📊 <b>Biểu đồ giá vàng 7 ngày gần nhất</b> (${meta.trendText})\n<i>Bấm các nút bên dưới để đổi khung thời gian hoặc loại vàng:</i>`;
+    await ctx.replyWithPhoto(new InputFile(buffer, 'gold-chart.png'), {
+      caption,
+      parse_mode: 'HTML',
+      reply_markup: createChartKeyboard(7, 'SJ9999')
+    });
   } catch (error) {
     await ctx.reply('⚠️ Không thể tải dữ liệu giá vàng lúc này. Vui lòng thử lại bằng lệnh /giavang.');
+  }
+});
+
+// LỆNH: /chart hoặc /bieudo
+bot.command(['chart', 'bieudo', 'dothi'], async (ctx) => {
+  const text = ctx.message?.text || '';
+  const args = text.trim().split(/\s+/).slice(1);
+
+  let days = 7;
+  let typeCode = 'SJ9999';
+
+  // Phân tích tham số người dùng nhập (ví dụ: /chart 30 hoặc /chart sjc hoặc /chart 30 sjc)
+  for (const arg of args) {
+    const num = parseInt(arg);
+    if (!isNaN(num) && num > 0) {
+      days = num;
+    } else if (arg.toLowerCase().includes('sjc') || arg.toLowerCase().includes('mieng')) {
+      typeCode = 'SJL1L10';
+    } else if (arg.toLowerCase().includes('nhan') || arg.toLowerCase().includes('9999')) {
+      typeCode = 'SJ9999';
+    }
+  }
+
+  const waitMsg = await ctx.reply(`⏳ Đang vẽ biểu đồ ${days} ngày qua cho bạn...`);
+
+  try {
+    const { buffer, meta } = await chartService.getChartBuffer(days, typeCode);
+    const caption = `📊 <b>BIỂU ĐỒ ${meta.typeTitle} (${meta.days} NGÀY)</b>\n` +
+      `▫️ Đáy: <b>${meta.minVal} tr</b> | Đỉnh: <b>${meta.maxVal} tr</b>\n` +
+      `▫️ Hiện tại: <b>${meta.currentVal} tr</b> (Biến động: <b>${meta.trendText}</b>)\n\n` +
+      `👉 <i>Bấm các nút bên dưới để chuyển đổi nhanh:</i>`;
+
+    await ctx.replyWithPhoto(new InputFile(buffer, `chart-${days}d.png`), {
+      caption,
+      parse_mode: 'HTML',
+      reply_markup: createChartKeyboard(meta.days, meta.typeCode)
+    });
+
+    // Xóa tin nhắn chờ
+    try { await ctx.api.deleteMessage(ctx.chat.id, waitMsg.message_id); } catch {}
+  } catch (err) {
+    await ctx.reply(`❌ Lỗi tạo biểu đồ: ${err.message}`);
+  }
+});
+
+// Xử lý khi người dùng bấm nút đổi biểu đồ trên Inline Keyboard
+bot.callbackQuery(/^chart_(\d+)_(.+)$/, async (ctx) => {
+  const days = parseInt(ctx.match[1]);
+  const typeCode = ctx.match[2];
+
+  await ctx.answerCallbackQuery({ text: `Đang tải biểu đồ ${days} ngày...` });
+
+  try {
+    const { buffer, meta } = await chartService.getChartBuffer(days, typeCode);
+    const caption = `📊 <b>BIỂU ĐỒ ${meta.typeTitle} (${meta.days} NGÀY)</b>\n` +
+      `▫️ Đáy: <b>${meta.minVal} tr</b> | Đỉnh: <b>${meta.maxVal} tr</b>\n` +
+      `▫️ Hiện tại: <b>${meta.currentVal} tr</b> (Biến động: <b>${meta.trendText}</b>)\n\n` +
+      `👉 <i>Bấm các nút bên dưới để chuyển đổi nhanh:</i>`;
+
+    // Gửi ảnh biểu đồ mới
+    await ctx.replyWithPhoto(new InputFile(buffer, `chart-${days}d.png`), {
+      caption,
+      parse_mode: 'HTML',
+      reply_markup: createChartKeyboard(meta.days, meta.typeCode)
+    });
+  } catch (err) {
+    await ctx.reply(`❌ Lỗi cập nhật biểu đồ: ${err.message}`);
   }
 });
 
@@ -121,13 +228,22 @@ bot.command('khuyennghi', async (ctx) => {
   }
 });
 
-// LỆNH: /test - Bắn thử ngay thông báo 8h sáng
+// LỆNH: /test - Bắn thử ngay thông báo 8h sáng kèm biểu đồ
 bot.command('test', async (ctx) => {
-  await ctx.reply('🚀 Đang tạo và gửi bản tin giả lập 8:00 sáng cho bạn...');
+  await ctx.reply('🚀 Đang tạo và gửi bản tin giả lập 8:00 sáng kèm biểu đồ cho bạn...');
   try {
     const goldData = await goldService.getFullGoldData();
     const message = messageFormatter.formatDailyReport(goldData);
     await ctx.reply(message, { parse_mode: 'HTML' });
+
+    // Gửi kèm biểu đồ 7 ngày
+    const { buffer, meta } = await chartService.getChartBuffer(7, 'SJ9999');
+    const caption = `📊 <b>Biểu đồ giá vàng 7 ngày qua</b> (${meta.trendText})\n<i>Bấm các nút bên dưới để chọn khung thời gian:</i>`;
+    await ctx.replyWithPhoto(new InputFile(buffer, 'gold-chart.png'), {
+      caption,
+      parse_mode: 'HTML',
+      reply_markup: createChartKeyboard(7, 'SJ9999')
+    });
   } catch (error) {
     await ctx.reply(`❌ Lỗi tạo bản tin test: ${error.message}`);
   }
@@ -148,12 +264,14 @@ bot.command('stop', async (ctx) => {
 bot.command('help', async (ctx) => {
   const helpMsg = `📖 <b>DANH SÁCH CÂU LỆNH BOT GIÁ VÀNG:</b>\n\n` +
     `/start - Đăng ký nhận tin tự động lúc 08:00 sáng mỗi ngày\n` +
+    `/chart - Xem biểu đồ biến động giá vàng (7d, 14d, 30d, 90d, 180d)\n` +
     `/giavang - Xem giá vàng nhẫn 9999 & SJC 9999 hiện tại\n` +
     `/thongke - Xem bảng so sánh % tăng/giảm (tuần, tháng, 3T, 6T)\n` +
     `/khuyennghi - Xem riêng nhận định MUA hay BÁN\n` +
-    `/test - Bắn thử bản tin 08:00 sáng ngay tức thì\n` +
+    `/test - Bắn thử bản tin 08:00 sáng kèm biểu đồ tức thì\n` +
     `/stop - Tắt nhận tin tự động hàng ngày\n` +
     `/help - Xem trợ giúp này\n\n` +
+    `💡 <i>Mẹo: Gõ <code>/chart 30</code> để xem ngay biểu đồ 1 tháng, hoặc <code>/chart sjc</code> để xem biểu đồ vàng miếng SJC.</i>\n` +
     `⏰ <i>Bot tự động gửi báo cáo mỗi ngày vào 08:00 AM (Giờ Việt Nam).</i>`;
   await ctx.reply(helpMsg, { parse_mode: 'HTML' });
 });
