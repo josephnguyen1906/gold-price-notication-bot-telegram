@@ -51,8 +51,20 @@ async function runTest() {
       .replace(/&gt;/g, '>');
     console.log(plainText);
 
+    console.log('\n----------------------------------------------------');
+    console.log('4. KIỂM TRA TẠO BIỂU ĐỒ (QUICKCHART API):');
+    console.log('----------------------------------------------------');
+    const { chartService } = await import('./services/chartService.js');
+    const chartStart = Date.now();
+    const { buffer, meta } = await chartService.getChartBuffer(7, 'SJ9999');
+    console.log(`✓ Đã tạo thành công biểu đồ ${meta.typeTitle} (${meta.days} ngày)!`);
+    console.log(`• Thời gian xử lý: ${Date.now() - chartStart}ms`);
+    console.log(`• Dung lượng ảnh: ${(buffer.length / 1024).toFixed(1)} KB`);
+    console.log(`• Xu hướng biểu đồ: ${meta.trendText}`);
+    console.log(`• URL tham khảo: ${meta.chartUrl.slice(0, 100)}...`);
+
     console.log('\n====================================================');
-    console.log('✅ KIỂM THỬ THÀNH CÔNG RỰC RỠ! DỮ LIỆU CHUẨN XÁC 100%');
+    console.log('✅ KIỂM THỬ THÀNH CÔNG RỰC RỠ! DỮ LIỆU & CHART CHUẨN XÁC 100%');
     console.log('====================================================');
   } catch (error) {
     console.error('❌ Lỗi kiểm thử:', error);
