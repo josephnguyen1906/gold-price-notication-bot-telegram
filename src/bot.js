@@ -135,8 +135,9 @@ bot.command(['chart', 'bieudo', 'dothi'], async (ctx) => {
   try {
     const { buffer, meta } = await chartService.getChartBuffer(days, typeCode);
     const caption = `📊 <b>BIỂU ĐỒ ${meta.typeTitle} (${meta.days} NGÀY)</b>\n` +
-      `▫️ Đáy: <b>${meta.minVal} tr</b> | Đỉnh: <b>${meta.maxVal} tr</b>\n` +
-      `▫️ Hiện tại: <b>${meta.currentVal} tr</b> (Biến động: <b>${meta.trendText}</b>)\n\n` +
+      `▫️ <b>Theo Cây (Lượng):</b> Đáy <b>${meta.minVal} tr</b> | Đỉnh <b>${meta.maxVal} tr</b> | Hiện tại: <b>${meta.currentVal} tr</b>\n` +
+      `▫️ <b>Theo Chỉ:</b> Đáy <b>${meta.minChi} tr</b> | Đỉnh <b>${meta.maxChi} tr</b> | Hiện tại: <b>${meta.currentChi} tr/chỉ</b>\n` +
+      `▫️ Biến động: <b>${meta.trendText}</b>\n\n` +
       `👉 <i>Bấm các nút bên dưới để chuyển đổi nhanh:</i>`;
 
     await ctx.replyWithPhoto(new InputFile(buffer, `chart-${days}d.png`), {
@@ -162,8 +163,9 @@ bot.callbackQuery(/^chart_(\d+)_(.+)$/, async (ctx) => {
   try {
     const { buffer, meta } = await chartService.getChartBuffer(days, typeCode);
     const caption = `📊 <b>BIỂU ĐỒ ${meta.typeTitle} (${meta.days} NGÀY)</b>\n` +
-      `▫️ Đáy: <b>${meta.minVal} tr</b> | Đỉnh: <b>${meta.maxVal} tr</b>\n` +
-      `▫️ Hiện tại: <b>${meta.currentVal} tr</b> (Biến động: <b>${meta.trendText}</b>)\n\n` +
+      `▫️ <b>Theo Cây (Lượng):</b> Đáy <b>${meta.minVal} tr</b> | Đỉnh <b>${meta.maxVal} tr</b> | Hiện tại: <b>${meta.currentVal} tr</b>\n` +
+      `▫️ <b>Theo Chỉ:</b> Đáy <b>${meta.minChi} tr</b> | Đỉnh <b>${meta.maxChi} tr</b> | Hiện tại: <b>${meta.currentChi} tr/chỉ</b>\n` +
+      `▫️ Biến động: <b>${meta.trendText}</b>\n\n` +
       `👉 <i>Bấm các nút bên dưới để chuyển đổi nhanh:</i>`;
 
     // Gửi ảnh biểu đồ mới

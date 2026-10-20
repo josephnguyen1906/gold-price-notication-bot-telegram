@@ -36,17 +36,19 @@ export const messageFormatter = {
     msg += `📅 <i>${nowFormatted} | Cập nhật tự động</i>\n`;
     msg += `────────────────────────\n\n`;
 
-    // 1. GIÁ VÀNG HIỆN TẠI
-    msg += `🥇 <b>1. GIÁ VÀNG 99 HIỆN TẠI:</b>\n`;
+    // 1. GIÁ VÀNG HIỆN TẠI (TÍNH THEO CÂY VÀ CHỈ)
+    msg += `🥇 <b>1. GIÁ VÀNG 99 HIỆN TẠI (CÂY & CHỈ):</b>\n`;
     if (ringStats) {
       msg += `💍 <b>Vàng Nhẫn 9999 (SJC Ring):</b>\n`;
-      msg += `  ▫️ Mua vào: <b>${goldService.formatMillionVnd(ringStats.buy)} tr</b> | Bán ra: <b>${goldService.formatMillionVnd(ringStats.sell)} tr</b>\n`;
-      msg += `  ▫️ Chênh lệch (Spread): <b>${goldService.formatMillionVnd(ringStats.spread)} tr/lượng</b>\n`;
+      msg += `  ▫️ <b>Theo Cây (Lượng):</b> Mua <b>${goldService.formatMillionVnd(ringStats.buy)} tr</b> | Bán <b>${goldService.formatMillionVnd(ringStats.sell)} tr</b>\n`;
+      msg += `  ▫️ <b>Theo Chỉ:</b> Mua <b>${goldService.formatChiVnd(ringStats.buy)} tr</b> | Bán <b>${goldService.formatChiVnd(ringStats.sell)} tr</b> (<b>${goldService.formatChiFullVnd(ringStats.sell)}/chỉ</b>)\n`;
+      msg += `  ▫️ Chênh lệch mua-bán: <b>${goldService.formatMillionVnd(ringStats.spread)} tr/cây</b> (${goldService.formatDiffChi(ringStats.spread)})\n`;
     }
     if (barStats) {
       msg += `\n🧱 <b>Vàng Miếng SJC 9999:</b>\n`;
-      msg += `  ▫️ Mua vào: <b>${goldService.formatMillionVnd(barStats.buy)} tr</b> | Bán ra: <b>${goldService.formatMillionVnd(barStats.sell)} tr</b>\n`;
-      msg += `  ▫️ Chênh lệch (Spread): <b>${goldService.formatMillionVnd(barStats.spread)} tr/lượng</b>\n`;
+      msg += `  ▫️ <b>Theo Cây (Lượng):</b> Mua <b>${goldService.formatMillionVnd(barStats.buy)} tr</b> | Bán <b>${goldService.formatMillionVnd(barStats.sell)} tr</b>\n`;
+      msg += `  ▫️ <b>Theo Chỉ:</b> Mua <b>${goldService.formatChiVnd(barStats.buy)} tr</b> | Bán <b>${goldService.formatChiVnd(barStats.sell)} tr</b> (<b>${goldService.formatChiFullVnd(barStats.sell)}/chỉ</b>)\n`;
+      msg += `  ▫️ Chênh lệch mua-bán: <b>${goldService.formatMillionVnd(barStats.spread)} tr/cây</b> (${goldService.formatDiffChi(barStats.spread)})\n`;
     }
     if (worldPrice) {
       msg += `\n🌍 <b>Vàng Thế Giới (XAU/USD):</b> <b>$${worldPrice.buy.toLocaleString('en-US')} / oz</b>\n`;
@@ -54,17 +56,18 @@ export const messageFormatter = {
 
     msg += `\n────────────────────────\n`;
 
-    // 2. THỐNG KÊ BIẾN ĐỘNG
+    // 2. THỐNG KÊ BIẾN ĐỘNG CẢ CÂY VÀ CHỈ
     if (stats) {
-      msg += `📊 <b>2. THỐNG KÊ TĂNG / GIẢM (%):</b>\n`;
+      msg += `📊 <b>2. THỐNG KÊ BIẾN ĐỘNG (CÂY & CHỈ):</b>\n`;
       msg += `<i>(Căn cứ theo giá bán Vàng Nhẫn 9999)</i>\n`;
-      msg += `  ▫️ <b>1 ngày qua:</b> ${getTrendIcon(stats.change1d.pct)} <b>${goldService.formatPct(stats.change1d.pct)}</b> (${goldService.formatDiffMillionVnd(stats.change1d.diff)})\n`;
-      msg += `  ▫️ <b>1 tuần qua:</b> ${getTrendIcon(stats.change7d.pct)} <b>${goldService.formatPct(stats.change7d.pct)}</b> (${goldService.formatDiffMillionVnd(stats.change7d.diff)})\n`;
-      msg += `  ▫️ <b>1 tháng qua:</b> ${getTrendIcon(stats.change30d.pct)} <b>${goldService.formatPct(stats.change30d.pct)}</b> (${goldService.formatDiffMillionVnd(stats.change30d.diff)})\n`;
-      msg += `  ▫️ <b>3 tháng qua:</b> ${getTrendIcon(stats.change90d.pct)} <b>${goldService.formatPct(stats.change90d.pct)}</b> (${goldService.formatDiffMillionVnd(stats.change90d.diff)})\n`;
-      msg += `  ▫️ <b>6 tháng qua:</b> ${getTrendIcon(stats.change180d.pct)} <b>${goldService.formatPct(stats.change180d.pct)}</b> (${goldService.formatDiffMillionVnd(stats.change180d.diff)})\n\n`;
+      msg += `  ▫️ <b>1 ngày qua:</b> ${getTrendIcon(stats.change1d.pct)} <b>${goldService.formatPct(stats.change1d.pct)}</b>\n      ➔ ${goldService.formatDiffBoth(stats.change1d.diff)}\n`;
+      msg += `  ▫️ <b>1 tuần qua:</b> ${getTrendIcon(stats.change7d.pct)} <b>${goldService.formatPct(stats.change7d.pct)}</b>\n      ➔ ${goldService.formatDiffBoth(stats.change7d.diff)}\n`;
+      msg += `  ▫️ <b>1 tháng qua:</b> ${getTrendIcon(stats.change30d.pct)} <b>${goldService.formatPct(stats.change30d.pct)}</b>\n      ➔ ${goldService.formatDiffBoth(stats.change30d.diff)}\n`;
+      msg += `  ▫️ <b>3 tháng qua:</b> ${getTrendIcon(stats.change90d.pct)} <b>${goldService.formatPct(stats.change90d.pct)}</b>\n      ➔ ${goldService.formatDiffBoth(stats.change90d.diff)}\n`;
+      msg += `  ▫️ <b>6 tháng qua:</b> ${getTrendIcon(stats.change180d.pct)} <b>${goldService.formatPct(stats.change180d.pct)}</b>\n      ➔ ${goldService.formatDiffBoth(stats.change180d.diff)}\n\n`;
 
-      msg += `📌 <i>Khoảng giá 6 tháng: ${goldService.formatMillionVnd(stats.min6m)} tr - ${goldService.formatMillionVnd(stats.max6m)} tr</i>\n`;
+      msg += `📌 <i>Khoảng giá 6 tháng (Cây): <b>${goldService.formatMillionVnd(stats.min6m)} tr - ${goldService.formatMillionVnd(stats.max6m)} tr</b></i>\n`;
+      msg += `📌 <i>Khoảng giá 6 tháng (Chỉ): <b>${goldService.formatChiVnd(stats.min6m)} tr - ${goldService.formatChiVnd(stats.max6m)} tr/chỉ</b></i>\n`;
       msg += `📌 <i>Vị thế hiện tại: <b>${stats.percentile}%</b> (0% đáy - 100% đỉnh)</i>\n`;
     }
 
@@ -87,7 +90,7 @@ export const messageFormatter = {
     msg += `<i>${analysis.advice}</i>\n\n`;
 
     msg += `────────────────────────\n`;
-    msg += `⚡ <i>Gõ /giavang xem ngay | /thongke xem biểu đồ | /help để trợ giúp</i>`;
+    msg += `⚡ <i>Gõ /chart xem biểu đồ | /giavang xem tức thì | /help để trợ giúp</i>`;
 
     return msg;
   },
@@ -105,14 +108,16 @@ export const messageFormatter = {
 
     if (ringStats) {
       msg += `💍 <b>Vàng Nhẫn 9999 (SJC):</b>\n`;
-      msg += `  • Mua: <b>${goldService.formatMillionVnd(ringStats.buy)} tr</b> | Bán: <b>${goldService.formatMillionVnd(ringStats.sell)} tr</b>\n`;
-      msg += `  • Biến động 24h: ${getTrendIcon(ringStats.change1d.pct)} ${goldService.formatPct(ringStats.change1d.pct)}\n\n`;
+      msg += `  • <b>Theo Cây:</b> Mua <b>${goldService.formatMillionVnd(ringStats.buy)} tr</b> | Bán <b>${goldService.formatMillionVnd(ringStats.sell)} tr</b>\n`;
+      msg += `  • <b>Theo Chỉ:</b> Mua <b>${goldService.formatChiVnd(ringStats.buy)} tr</b> | Bán <b>${goldService.formatChiVnd(ringStats.sell)} tr</b> (<b>${goldService.formatChiFullVnd(ringStats.sell)}/chỉ</b>)\n`;
+      msg += `  • Biến động 24h: ${getTrendIcon(ringStats.change1d.pct)} ${goldService.formatPct(ringStats.change1d.pct)} (${goldService.formatDiffBoth(ringStats.change1d.diff)})\n\n`;
     }
 
     if (barStats) {
       msg += `🧱 <b>Vàng Miếng SJC 9999:</b>\n`;
-      msg += `  • Mua: <b>${goldService.formatMillionVnd(barStats.buy)} tr</b> | Bán: <b>${goldService.formatMillionVnd(barStats.sell)} tr</b>\n`;
-      msg += `  • Biến động 24h: ${getTrendIcon(barStats.change1d.pct)} ${goldService.formatPct(barStats.change1d.pct)}\n\n`;
+      msg += `  • <b>Theo Cây:</b> Mua <b>${goldService.formatMillionVnd(barStats.buy)} tr</b> | Bán <b>${goldService.formatMillionVnd(barStats.sell)} tr</b>\n`;
+      msg += `  • <b>Theo Chỉ:</b> Mua <b>${goldService.formatChiVnd(barStats.buy)} tr</b> | Bán <b>${goldService.formatChiVnd(barStats.sell)} tr</b> (<b>${goldService.formatChiFullVnd(barStats.sell)}/chỉ</b>)\n`;
+      msg += `  • Biến động 24h: ${getTrendIcon(barStats.change1d.pct)} ${goldService.formatPct(barStats.change1d.pct)} (${goldService.formatDiffBoth(barStats.change1d.diff)})\n\n`;
     }
 
     if (worldPrice) {
@@ -137,19 +142,25 @@ export const messageFormatter = {
     let msg = `📊 <b>BẢNG THỐNG KÊ CHI TIẾT VÀNG NHẪN 9999</b>\n`;
     msg += `📅 <i>Tính đến ngày ${formatDate(ringStats.date)}</i>\n\n`;
 
-    msg += `💰 <b>Giá bán hiện tại:</b> <b>${goldService.formatMillionVnd(ringStats.sell)} triệu đ/lượng</b>\n\n`;
+    msg += `💰 <b>Giá bán hiện tại:</b>\n`;
+    msg += `  ▫️ <b>1 Cây (Lượng):</b> <b>${goldService.formatMillionVnd(ringStats.sell)} triệu đ</b>\n`;
+    msg += `  ▫️ <b>1 Chỉ:</b> <b>${goldService.formatChiVnd(ringStats.sell)} triệu đ</b> (<b>${goldService.formatChiFullVnd(ringStats.sell)}/chỉ</b>)\n\n`;
 
-    msg += `📈 <b>BẢNG SO SÁNH CÁC KỲ HẠN:</b>\n`;
-    msg += `• <b>Hôm qua (1 ngày):</b>\n  Giá cũ: ${goldService.formatMillionVnd(ringStats.p1d)} tr ➔ ${getTrendIcon(ringStats.change1d.pct)} <b>${goldService.formatPct(ringStats.change1d.pct)}</b> (${goldService.formatDiffMillionVnd(ringStats.change1d.diff)})\n\n`;
-    msg += `• <b>1 Tuần trước (7 ngày):</b>\n  Giá cũ: ${goldService.formatMillionVnd(ringStats.p7d)} tr ➔ ${getTrendIcon(ringStats.change7d.pct)} <b>${goldService.formatPct(ringStats.change7d.pct)}</b> (${goldService.formatDiffMillionVnd(ringStats.change7d.diff)})\n\n`;
-    msg += `• <b>1 Tháng trước (30 ngày):</b>\n  Giá cũ: ${goldService.formatMillionVnd(ringStats.p30d)} tr ➔ ${getTrendIcon(ringStats.change30d.pct)} <b>${goldService.formatPct(ringStats.change30d.pct)}</b> (${goldService.formatDiffMillionVnd(ringStats.change30d.diff)})\n\n`;
-    msg += `• <b>3 Tháng trước (90 ngày):</b>\n  Giá cũ: ${goldService.formatMillionVnd(ringStats.p90d)} tr ➔ ${getTrendIcon(ringStats.change90d.pct)} <b>${goldService.formatPct(ringStats.change90d.pct)}</b> (${goldService.formatDiffMillionVnd(ringStats.change90d.diff)})\n\n`;
-    msg += `• <b>6 Tháng trước (180 ngày):</b>\n  Giá cũ: ${goldService.formatMillionVnd(ringStats.p180d)} tr ➔ ${getTrendIcon(ringStats.change180d.pct)} <b>${goldService.formatPct(ringStats.change180d.pct)}</b> (${goldService.formatDiffMillionVnd(ringStats.change180d.diff)})\n\n`;
+    msg += `📈 <b>BẢNG SO SÁNH CÁC KỲ HẠN (CẢ CÂY & CHỈ):</b>\n`;
+    msg += `• <b>Hôm qua (1 ngày):</b>\n  Giá cũ: ${goldService.formatMillionVnd(ringStats.p1d)} tr/cây (${goldService.formatChiVnd(ringStats.p1d)} tr/chỉ)\n  ➔ ${getTrendIcon(ringStats.change1d.pct)} <b>${goldService.formatPct(ringStats.change1d.pct)}</b>: ${goldService.formatDiffBoth(ringStats.change1d.diff)}\n\n`;
+
+    msg += `• <b>1 Tuần trước (7 ngày):</b>\n  Giá cũ: ${goldService.formatMillionVnd(ringStats.p7d)} tr/cây (${goldService.formatChiVnd(ringStats.p7d)} tr/chỉ)\n  ➔ ${getTrendIcon(ringStats.change7d.pct)} <b>${goldService.formatPct(ringStats.change7d.pct)}</b>: ${goldService.formatDiffBoth(ringStats.change7d.diff)}\n\n`;
+
+    msg += `• <b>1 Tháng trước (30 ngày):</b>\n  Giá cũ: ${goldService.formatMillionVnd(ringStats.p30d)} tr/cây (${goldService.formatChiVnd(ringStats.p30d)} tr/chỉ)\n  ➔ ${getTrendIcon(ringStats.change30d.pct)} <b>${goldService.formatPct(ringStats.change30d.pct)}</b>: ${goldService.formatDiffBoth(ringStats.change30d.diff)}\n\n`;
+
+    msg += `• <b>3 Tháng trước (90 ngày):</b>\n  Giá cũ: ${goldService.formatMillionVnd(ringStats.p90d)} tr/cây (${goldService.formatChiVnd(ringStats.p90d)} tr/chỉ)\n  ➔ ${getTrendIcon(ringStats.change90d.pct)} <b>${goldService.formatPct(ringStats.change90d.pct)}</b>: ${goldService.formatDiffBoth(ringStats.change90d.diff)}\n\n`;
+
+    msg += `• <b>6 Tháng trước (180 ngày):</b>\n  Giá cũ: ${goldService.formatMillionVnd(ringStats.p180d)} tr/cây (${goldService.formatChiVnd(ringStats.p180d)} tr/chỉ)\n  ➔ ${getTrendIcon(ringStats.change180d.pct)} <b>${goldService.formatPct(ringStats.change180d.pct)}</b>: ${goldService.formatDiffBoth(ringStats.change180d.diff)}\n\n`;
 
     msg += `────────────────────────\n`;
     msg += `📐 <b>BIÊN ĐỘ 6 THÁNG:</b>\n`;
-    msg += `  ▫️ Đáy thấp nhất: <b>${goldService.formatMillionVnd(ringStats.min6m)} tr</b>\n`;
-    msg += `  ▫️ Đỉnh cao nhất: <b>${goldService.formatMillionVnd(ringStats.max6m)} tr</b>\n`;
+    msg += `  ▫️ Đáy: <b>${goldService.formatMillionVnd(ringStats.min6m)} tr/cây</b> (${goldService.formatChiVnd(ringStats.min6m)} tr/chỉ)\n`;
+    msg += `  ▫️ Đỉnh: <b>${goldService.formatMillionVnd(ringStats.max6m)} tr/cây</b> (${goldService.formatChiVnd(ringStats.max6m)} tr/chỉ)\n`;
     msg += `  ▫️ So với đỉnh: <b>${ringStats.dropFromPeak}%</b>\n`;
     msg += `  ▫️ So với đáy: <b>+${ringStats.riseFromBottom}%</b>\n`;
     msg += `  ▫️ Thước đo vị thế: <b>${ringStats.percentile}%</b>\n\n`;

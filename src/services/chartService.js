@@ -40,7 +40,15 @@ export const chartService = {
     const currentVal = validSell[validSell.length - 1];
     const diff = parseFloat((currentVal - startVal).toFixed(2));
     const pct = parseFloat(((diff / startVal) * 100).toFixed(2));
-    const trendText = diff >= 0 ? `+${diff} tr (+${pct}%)` : `${diff} tr (${pct}%)`;
+    const diffChiK = Math.round((diff * 1000) / 10);
+    const diffChiText = diffChiK >= 0 ? `+${diffChiK}k/chỉ` : `${diffChiK}k/chỉ`;
+    const trendText = diff >= 0 
+      ? `+${diff} tr/cây (${diffChiText}, +${pct}%)` 
+      : `${diff} tr/cây (${diffChiText}, ${pct}%)`;
+
+    const minChi = parseFloat((minVal / 10).toFixed(2));
+    const maxChi = parseFloat((maxVal / 10).toFixed(2));
+    const currentChi = parseFloat((currentVal / 10).toFixed(2));
 
     const typeTitle = typeCode === 'SJL1L10' ? 'VÀNG MIẾNG SJC 9999' : 'VÀNG NHẪN SJC 9999';
 
@@ -141,8 +149,12 @@ export const chartService = {
       minVal,
       maxVal,
       currentVal,
+      minChi,
+      maxChi,
+      currentChi,
       diff,
       pct,
+      diffChiText,
       trendText
     };
   },

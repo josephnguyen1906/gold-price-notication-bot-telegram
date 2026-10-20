@@ -180,7 +180,7 @@ export const goldService = {
     }
   },
 
-  // Định dạng tiền tệ VND triệu đồng/lượng
+  // Định dạng tiền tệ VND triệu đồng/lượng (1 cây = 1 lượng = 10 chỉ)
   formatMillionVnd(amount) {
     if (!amount && amount !== 0) return '0.00';
     return (amount / 1000000).toLocaleString('vi-VN', {
@@ -189,10 +189,44 @@ export const goldService = {
     });
   },
 
-  // Định dạng số tiền chênh lệch có dấu +/-
+  // Định dạng số tiền theo 1 chỉ (1 lượng = 10 chỉ)
+  formatChiVnd(amount) {
+    if (!amount && amount !== 0) return '0.00';
+    return (amount / 10000000).toLocaleString('vi-VN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  },
+
+  // Định dạng đầy đủ VND theo 1 chỉ (ví dụ: 14.120.000 đ)
+  formatChiFullVnd(amount) {
+    if (!amount && amount !== 0) return '0 đ';
+    return `${Math.round(amount / 10).toLocaleString('vi-VN')} đ`;
+  },
+
+  // Định dạng số tiền chênh lệch theo cây (lượng) có dấu +/-
   formatDiffMillionVnd(amount) {
     const prefix = amount > 0 ? '+' : '';
-    return `${prefix}${this.formatMillionVnd(amount)} tr`;
+    return `${prefix}${this.formatMillionVnd(amount)} tr/cây`;
+  },
+
+  // Định dạng số tiền chênh lệch theo 1 chỉ có dấu +/-
+  formatDiffChi(amount) {
+    if (!amount && amount !== 0) return '0 đ/chỉ';
+    const perChi = Math.round(amount / 10);
+    const prefix = perChi > 0 ? '+' : '';
+    if (Math.abs(perChi) >= 1000000) {
+      return `${prefix}${(perChi / 1000000).toFixed(2)} tr/chỉ`;
+    }
+    return `${prefix}${(perChi / 1000).toLocaleString('vi-VN')}k/chỉ`;
+  },
+
+  // Định dạng kết hợp cả Cây và Chỉ
+  formatDiffBoth(amount) {
+    const prefix = amount > 0 ? '+' : '';
+    const cay = `${prefix}${this.formatMillionVnd(amount)} tr/cây`;
+    const chi = this.formatDiffChi(amount);
+    return `${cay} (${chi})`;
   },
 
   // Định dạng % có dấu +/-
